@@ -1,0 +1,26 @@
+---
+version: "3.7"
+services:
+  sshd:
+    env_file: [docker.env]
+    build: {context: "."}
+    volumes:
+    - ./keys:/etc/authorized_keys
+    - /mnt/nobackup/data/mediaserver/:/home/media
+    - ./hostkeys:/etc/ssh/keys.in
+    - ./supervisor.d/sshd:/etc/supervisor.d/sshd
+    - ./supervisor.d/fail2ban:/etc/supervisor.d/fail2ban
+    - ./entry.sh:/entry.sh
+    - ./fail2ban-supervisor.sh:/fail2ban-supervisor.sh
+    - ./sshd_config.in:/etc/ssh/sshd_config.in
+    - ./acls.sh:/acls.sh
+    - fail2ban:/var/lib/fail2ban
+    - ./fail2ban:/fail2ban
+    restart: always
+    environment:
+      SUPERVISOR_CONFIGS: "/etc/supervisor.d/rsyslog /etc/supervisor.d/sshd /etc/supervisor.d/cron /etc/supervisor.d/fail2ban"
+      SSHD_SDEBUG: 1
+    cap_add: [NET_ADMIN, NET_RAW]
+
+volumes:
+  fail2ban:
