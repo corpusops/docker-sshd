@@ -103,6 +103,11 @@ if [ -v MOTD ]; then
     echo -e "$MOTD" > /etc/motd
 fi
 
+if [ -e acls.sh ] ;then
+    echo "Acls setup" >&2
+    /acls.sh || /bin/true
+fi
+
 cp -rfv /fail2ban/* /etc/fail2ban
 frep --overwrite /fail2ban/jail.d/alpine-ssh.conf:/etc/fail2ban/jail.d/alpine-ssh.conf
 exec /bin/supervisord.sh

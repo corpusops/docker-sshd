@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -ex
+cd /home
+setfacl -R -b -k .
+setfacl -R -m u:user:rwx,u:userro:r-x,d:u:user:rwx,d:u:userro:r-x .
+# vim:set et sts=4 ts=4 tw=80:

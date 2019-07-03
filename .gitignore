@@ -1,1 +1,7 @@
 /files/
+/local
+docker-compose.local.yml
+/keys
+acls.sh
+docker.env
+docker-compose.local.yml docker.env
