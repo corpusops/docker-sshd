@@ -1,10 +1,9 @@
 ---
+# media server example
 version: "3.7"
 services:
   sshd:
     image: myhome/certs
-    ports:
-    - 0.0.0.0:55555:22
     volumes:
     - ./acls.sh:/acls.sh
-    - /mnt/nobackup/data/mediaserver/:/home/media
+    - "${MEDIA_PATH:-/mnt/nobackup/data/mediaserver/}:/home/media"

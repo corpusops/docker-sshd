@@ -1,0 +1,16 @@
+[program:source_ip]
+command = /source_ip/run.sh
+autostart = true
+startretries = 3
+stopwaitsecs = 3
+autorestart = true
+killasgroup = true
+stopasgroup = true
+stopsignal = KILL
+startretries = 5
+stdout_logfile = /dev/stdout
+stderr_logfile = /dev/stderr
+stdout_logfile_maxbytes = 0
+stderr_logfile_maxbytes = 0
+stdout_logfile_backups = 0
+stderr_logfile_backups = 0>

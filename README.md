@@ -22,7 +22,7 @@ Optionally mount.form [sshd_config.in](./sshd_config.in) as a custom sshd config
 - `TZ` user timezone
 
 ## SSH Keys
-You can set allowed keys for a particular user by creating authorized_keys files under ``keys``, eg ``keys/myuser``.
+You can set allowed keys for a particular user by creating authorized_keys files under ``./keys``, eg ``./keys/myuser``.
 
 ## SSH Host Keys
 
@@ -52,3 +52,24 @@ or
 ```
 docker-compose run -v $(pwd)/id_rsa.pub:/etc/authorized_keys/www -e SSH_USERS="www:48:48" sshd
 ```
+
+
+## Media server usage
+```sh
+cp .env.mediaserver .env
+cp -f docker-compose.mediaserver.yml docker-compose.override.yml
+$EDITOR .env
+$EDITOR docker-compose.override.yml
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --force-recreate
+```
+
+
+## VPN usage (configure outgoing ip)
+```sh
+cp .env.vpn .env
+cp -f docker-compose.vpn.yml docker-compose.override.yml
+$EDITOR .env
+$EDITOR docker-compose.override.yml
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --force-recreate
+```
+

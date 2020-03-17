@@ -2,11 +2,13 @@
 version: "3.7"
 services:
   sshd:
-    env_file: [docker.env]
+    image: corpusops/sshd
+    env_file: [.env]
     build: {context: "."}
     volumes:
     - ./keys:/etc/authorized_keys.in
     - ./hostkeys:/etc/ssh/keys.in
+    - keys:/etc/ssh/keys
     - ./supervisor.d/sshd:/etc/supervisor.d/sshd
     - ./supervisor.d/fail2ban:/etc/supervisor.d/fail2ban
     - ./entry.sh:/entry.sh
@@ -19,5 +21,7 @@ services:
       SUPERVISOR_CONFIGS: "/etc/supervisor.d/rsyslog /etc/supervisor.d/sshd /etc/supervisor.d/cron /etc/supervisor.d/fail2ban"
       SSHD_SDEBUG: 1
     cap_add: [NET_ADMIN, NET_RAW]
+    ports: ["0.0.0.0:${OUTPORT:-55555}:22"]
 volumes:
   fail2ban:
+  keys:

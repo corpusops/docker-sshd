@@ -1,0 +1,22 @@
+---
+version: "3.7"
+networks:
+  sshd:
+    driver_opts: {com.docker.network.bridge.enable_ip_masquerade: 'false'}
+    ipam: {config: [{subnet: "${SUBNET}.0/24"}]}
+services:
+  sshd:
+    networks: {sshd: {ipv4_address: "${SUBNET}.2"}}
+  configure-source-ip:
+    env_file: [.env]
+    image: corpusops/ms_iptables
+    command: /bin/supervisord.sh
+    volumes:
+    - "./source_ip/:/source_ip:ro"
+    environment:
+    - SUPERVISORD_CONFIGS=/source_ip/supervisor
+    cap_add: [NET_ADMIN]
+    network_mode: "host"
+volumes:
+  fail2ban:
+  keys:
