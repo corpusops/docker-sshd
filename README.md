@@ -1,10 +1,10 @@
 # SSHD
 
 - Minimal Alpine Linux Docker image with `sshd` exposed and `rsync` installed.
-- Largely inspired from [kiorky/docker-sshd](https://github.com/kiorky/docker-sshd)<br/>
   notable differences:
     - logging (rsyslog)
     - logrotate logs
+    - fail2ban
 
 Mount your .ssh credentials (RSA public keys) at `/root/.ssh/` in order to
 access the container via root ssh or mount each user's key in
@@ -18,6 +18,11 @@ Optionally mount.form [sshd_config.in](./sshd_config.in) as a custom sshd config
 - `MOTD` change the login message
 - `SFTP_MODE` if "true" sshd will only accept sftp connections
 - `SFTP_CHROOT` if in sftp only mode sftp will be chrooted to this directory. Default "/data"
+- `MAX_RETRY` max retries before fail2ban cut the line
+- `TZ` user timezone
+
+## SSH Keys
+You can set allowed keys for a particular user by creating authorized_keys files under ``keys``, eg ``keys/myuser``.
 
 ## SSH Host Keys
 
@@ -39,11 +44,11 @@ Please note that all components of the pathname in the ChrootDirectory directive
 ## Usage Example
 
 ```
-docker run -d -p 2222:22 -v /secrets/id_rsa.pub:/root/.ssh/authorized_keys -v /mnt/data/:/data/ docker.io/kiorky/sshd
+docker-compose run -v /secrets/id_rsa.pub:/root/.ssh/authorized_keys -v /mnt/data/:/data/ sshd
 ```
 
 or
 
 ```
-docker run -d -p 2222:22 -v $(pwd)/id_rsa.pub:/etc/authorized_keys/www -e SSH_USERS="www:48:48" docker.io/kiorky/sshd
+docker-compose run -v $(pwd)/id_rsa.pub:/etc/authorized_keys/www -e SSH_USERS="www:48:48" sshd
 ```

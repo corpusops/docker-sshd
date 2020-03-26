@@ -5,7 +5,7 @@ services:
     env_file: [docker.env]
     build: {context: "."}
     volumes:
-    - ./keys:/etc/authorized_keys
+    - ./keys:/etc/authorized_keys.in
     - ./hostkeys:/etc/ssh/keys.in
     - ./supervisor.d/sshd:/etc/supervisor.d/sshd
     - ./supervisor.d/fail2ban:/etc/supervisor.d/fail2ban

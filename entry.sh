@@ -65,15 +65,15 @@ fi
 if [ -w ~/.ssh ]; then
     chown root:root ~/.ssh && chmod 700 ~/.ssh/
 fi
-if [ -w ~/.ssh/authorized_keys ]; then
+if [ -e ~/.ssh/authorized_keys ];then
     chown root:root ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
 fi
-if [ -w /etc/authorized_keys ]; then
-    chown root:root /etc/authorized_keys
-    chmod 755 /etc/authorized_keys
-    find /etc/authorized_keys/ -type f -exec chmod 644 {} \;
-fi
+if [ -e /etc/authorized_keys.in ];then cp -rvf /etc/authorized_keys.in/* /etc/authorized_keys;fi
+chown root:root /etc/authorized_keys
+chmod 755 /etc/authorized_keys
+find /etc/authorized_keys/ -type f -exec chown root:root {} \;
+find /etc/authorized_keys/ -type f -exec chmod 644 {} \;
 # Add users if SSH_USERS=user:uid:gid set
 if [ -n "${SSH_USERS}" ]; then
     USERS=$(echo $SSH_USERS | tr "," "\n")
@@ -108,6 +108,8 @@ if [ -e acls.sh ] ;then
     /acls.sh || /bin/true
 fi
 
+rm -f /run/rsyslogd.pid
 cp -rfv /fail2ban/* /etc/fail2ban
+if [ -e /run/fail2ban ];then rm -f /run/fail2ban/fail2ban.*;fi
 frep --overwrite /fail2ban/jail.d/alpine-ssh.conf:/etc/fail2ban/jail.d/alpine-ssh.conf
 exec /bin/supervisord.sh

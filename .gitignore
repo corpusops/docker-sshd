@@ -1,4 +1,6 @@
 /files/
+/.env
+/hostkeys/*
 /local
 docker-compose.local.yml
 /keys
