@@ -10,14 +10,15 @@ Mount your .ssh credentials (RSA public keys) at `/root/.ssh/` in order to
 access the container via root ssh or mount each user's key in
 `/etc/authorized_keys/<username>` and set `SSH_USERS` config to create user accounts (see below).
 
-Optionally mount.form [sshd_config.in](./sshd_config.in) as a custom sshd config at `/etc/ssh/sshd_config.in`.
+- Optionally mount [sshd_config.in](./sshd_config.in) as a custom sshd config at `/etc/ssh/sshd_config.in`.<br/>
+  You can override in the compose setup the template location via the `SSHD_CONFIG` env var.
 
 ## Environment Options
 
 - `SSH_USERS` list of user accounts and uids/gids to create. eg `SSH_USERS=www:48:48,admin:1000:1000`
 - `MOTD` change the login message
-- `SFTP_MODE` if "true" sshd will only accept sftp connections
-- `SFTP_CHROOT` if in sftp only mode sftp will be chrooted to this directory. Default "/data"
+- `SFTP_MODE` if set to `true` sshd will only accept sftp connections
+- `SFTP_CHROOT` if set to `true` in sftp only mode sftp will be chrooted to this directory `SFTP_CHROOT_PATH`. Default `home`
 - `MAX_RETRY` max retries before fail2ban cut the line
 - `TZ` user timezone
 
@@ -72,4 +73,28 @@ $EDITOR .env
 $EDITOR docker-compose.override.yml
 docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --force-recreate
 ```
+
+
+## Ad Hoc ssh client
+
+```sh
+docker run -it --entrypoint ssh corpusops/sshd google.com
+docker run -it --entrypoint rsync corpusops/sshd google.com
+```
+
+### Full example with sshagent
+
+```sh
+eval `ssh-agent`
+ssh-add ~/.ssh/id_rsa
+docker run -it \
+    -v /path/to/transfer:/transfer \
+    -v $HOME/.ssh/.config:/root/.ssh/config:ro \
+    -v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent \
+    -e SSH_AUTH_SOCK=/ssh-agent \
+    --entrypoint rsync corpusops/sshd \
+    -e "ssh -o StrictHostKeyChecking=no" \
+    -azv /transfer/ myhost:/destinationpath/
+```
+
 

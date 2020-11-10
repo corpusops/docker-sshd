@@ -4,7 +4,6 @@ services:
   sshd:
     image: corpusops/sshd
     env_file: [.env]
-    build: {context: "."}
     volumes:
     - ./keys:/etc/authorized_keys.in
     - ./hostkeys:/etc/ssh/keys.in
@@ -13,13 +12,12 @@ services:
     - ./supervisor.d/fail2ban:/etc/supervisor.d/fail2ban
     - ./entry.sh:/entry.sh
     - ./fail2ban-supervisor.sh:/fail2ban-supervisor.sh
-    - ./sshd_config.in:/etc/ssh/sshd_config.in
+    - ${SSHD_CONFIG:-./sshd_config.in}:/etc/ssh/sshd_config.in
     - fail2ban:/var/lib/fail2ban
     - ./fail2ban:/fail2ban
     restart: always
     environment:
       SUPERVISOR_CONFIGS: "/etc/supervisor.d/rsyslog /etc/supervisor.d/sshd /etc/supervisor.d/cron /etc/supervisor.d/fail2ban"
-      SSHD_SDEBUG: 1
     cap_add: [NET_ADMIN, NET_RAW]
     ports: ["0.0.0.0:${OUTPORT:-55555}:22"]
 volumes:

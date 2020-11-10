@@ -3,7 +3,5 @@
 version: "3.7"
 services:
   sshd:
-    image: myhome/certs
-    volumes:
     - ./acls.sh:/acls.sh
     - "${MEDIA_PATH:-/mnt/nobackup/data/mediaserver/}:/home/media"

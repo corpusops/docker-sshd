@@ -108,7 +108,9 @@ Subsystem sftp internal-sftp
 AllowTCPForwarding no
 X11Forwarding no
 ForceCommand internal-sftp
-ChrootDirectory /data
+{{ if eq (.Env.SFTP_CHROOT|default "") "true" }}
+ChrootDirectory {{.Env.SFTP_CHROOT_PATH|default "/home"}}
+{{ end }}
 {{ else }}
 Subsystem	sftp	/usr/lib/ssh/sftp-server
 {{ end }}
