@@ -82,19 +82,19 @@ docker run -it --entrypoint ssh corpusops/sshd google.com
 docker run -it --entrypoint rsync corpusops/sshd google.com
 ```
 
-### Full example with sshagent
+### Full example of rsync transfer with sshagent
 
 ```sh
 eval `ssh-agent`
 ssh-add ~/.ssh/id_rsa
 docker run -it \
     -v /path/to/transfer:/transfer \
-    -v $HOME/.ssh/.config:/root/.ssh/config:ro \
+    -v $HOME/.ssh/:/issh:ro \
     -v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent \
-    -e SSH_AUTH_SOCK=/ssh-agent \
-    --entrypoint rsync corpusops/sshd \
-    -e "ssh -o StrictHostKeyChecking=no" \
-    -azv /transfer/ myhost:/destinationpath/
+    -e SSH_AUTH_SOCK=/ssh-agent \    
+    --entrypoint sh corpusops/sshd  \
+    -ec  'rsync -azv /issh/ /root/.ssh/ && chown -Rf root:root /root/.ssh && \
+    rsync -azv myhost:/totransfer/ /transfer/'
 ```
 
 
