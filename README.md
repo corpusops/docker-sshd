@@ -91,7 +91,7 @@ docker run -it \
     -v /path/to/transfer:/transfer \
     -v $HOME/.ssh/:/issh:ro \
     -v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent \
-    -e SSH_AUTH_SOCK=/ssh-agent \    
+    -e SSH_AUTH_SOCK=/ssh-agent \
     --entrypoint sh corpusops/sshd  \
     -ec  'rsync -azv /issh/ /root/.ssh/ && chown -Rf root:root /root/.ssh && \
     rsync -azv myhost:/totransfer/ /transfer/'
