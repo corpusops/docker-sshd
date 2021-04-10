@@ -17,7 +17,8 @@ services:
     - ./fail2ban:/fail2ban
     restart: always
     cap_add: [NET_ADMIN, NET_RAW]
-    ports: ["0.0.0.0:${OUTPORT:-55555}:22"]
+    ports:
+    - "${BINDIP:-0.0.0.0}:${OUTPORT:-55555}:22"
 volumes:
   fail2ban:
   keys:

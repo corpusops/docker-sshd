@@ -1,0 +1,61 @@
+---
+# media server example
+version: "3.7"
+services:
+  samba:
+    env_file: [.env]
+    image: "${SAMBA_IMAGE:-mediaserversamba}"
+    ports:
+    - "${BINDIP:-0.0.0.0}:${SMB_OUTPORT:-137}:137/udp"
+    - "${BINDIP:-0.0.0.0}:${SMB_OUTPORT:-138}:138/udp"
+    - "${BINDIP:-0.0.0.0}:${SMB_OUTPORT:-139}:139"
+    - "${BINDIP:-0.0.0.0}:${NMB_OUTPORT:-445}:445"
+    command:
+    # Start the 'nmbd' daemon to advertise the shares
+    - "-n"
+    # Disable recycle bin for shares
+    - "-r"
+    - "-g"
+    - "force user ="
+    - "-g"
+    - "force group ="
+
+    # -u "<username;password>[;ID;group;GID]"
+    #   Add a user
+    #   <username> for user
+    #   <password> for user
+    #   [ID] for user
+    #   [group] for user
+    #   [GID] for group
+    # -s "<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]"
+    #    Configure a share
+    #    required arg: "<name>;</path>"
+    #    <name> is how it's called for clients
+    #    <path> path to share
+    #    NOTE: for the default values, just leave blank
+    #    [browsable] default:'yes' or 'no'
+    #    [readonly] default:'yes' or 'no'
+    #    [guest] allowed default:'yes' or 'no'
+    #    NOTE: for user lists below, usernames are separated by ','
+    #    [users] allowed default:'all' or list of allowed users
+    #    [admins] allowed default:'none' or list of admin users
+    #    [writelist] list of users that can write to a RO share
+    #    [comment] description of share    #
+    # Add a share
+    #  -s "myshares;/home/media/mysharener;yes;no;no;mysharener;none;;myshares"
+    #  -u "mysharener;supersecret;mysharener;1008;mysharener;1008"
+    volumes:
+    - "${MEDIA_PATH:-/mnt/nobackup/data/mediaserver}:/home/media"
+    - "smbetc:/etc"
+    - "smbcache:/var/cache/samba"
+    - "smblib:/var/lib/samba"
+    - "smblog:/var/log/samba"
+    - "smbrun:/run/samba"
+    # - "./samba.sh:/usr/bin/samba.sh"
+
+volumes:
+  smbetc:
+  smbcache:
+  smblib:
+  smblog:
+  smbrun:

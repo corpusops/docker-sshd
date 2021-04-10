@@ -3,5 +3,6 @@
 version: "3.7"
 services:
   sshd:
+    volumes:
     - ./acls.sh:/acls.sh
     - "${MEDIA_PATH:-/mnt/nobackup/data/mediaserver/}:/home/media"
