@@ -16,8 +16,6 @@ services:
     - fail2ban:/var/lib/fail2ban
     - ./fail2ban:/fail2ban
     restart: always
-    environment:
-      SUPERVISOR_CONFIGS: "/etc/supervisor.d/rsyslog /etc/supervisor.d/sshd /etc/supervisor.d/cron /etc/supervisor.d/fail2ban"
     cap_add: [NET_ADMIN, NET_RAW]
     ports: ["0.0.0.0:${OUTPORT:-55555}:22"]
 volumes:

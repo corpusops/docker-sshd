@@ -1,0 +1,15 @@
+---
+version: "3.7"
+services:
+  sshd:
+    image: corpusops/sshd
+    env_file: [.env]
+    volumes:
+    - keys:/etc/ssh/keys
+    - fail2ban:/var/lib/fail2ban
+    restart: always
+    cap_add: [NET_ADMIN, NET_RAW]
+    ports: ["0.0.0.0:${OUTPORT:-55555}:22"]
+volumes:
+  fail2ban:
+  keys:
