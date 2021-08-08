@@ -1,4 +1,5 @@
 # SSHD
+- build: [![docker.sshd](https://github.com/corpusops/docker.sshd/workflows/.github/workflows/cicd.yml/badge.svg?branch=master)]
 
 - Minimal Alpine Linux Docker image with `sshd` exposed and `rsync` installed.
   notable differences:

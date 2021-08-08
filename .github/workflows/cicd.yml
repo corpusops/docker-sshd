@@ -1,0 +1,51 @@
+env:
+  DOCKER_BUILDKIT: "1"
+  COMPOSE_DOCKER_CLI_BUILD: "1"
+  BUILDKIT_PROGRESS: "plain"
+  NO_SQUASH: ""
+  RELEASABLE_REPOS: "^corpusops/"
+  RELEASABLE_BRANCHES: "^(refs/heads/)?(master|main|workflows)$"
+jobs:
+  r:
+    runs-on: ubuntu-20.04
+    env: {IMG: "${{matrix.IMG}}", DFILE: "${{matrix.DFILE}}", DPATH: "${{matrix.DPATH}}",
+          IMG_RELEASE: "${{matrix.IMG_RELEASE}}",}
+    steps:
+      - name: Set vars
+        run: |-
+            if ( echo "$GITHUB_REF" | egrep -q "${RELEASABLE_BRANCHES}" ) \
+            && ( echo "$GITHUB_REPOSITORY" | egrep -q "${RELEASABLE_REPOS}" )
+            then releasable=true;else releasable=false;fi
+            echo "::set-output name=releasable::$releasable"
+            echo "::set-output name=silent::$(echo $silent)"
+        id: v
+      - uses: docker/login-action@v1
+        with: {username: "${{ secrets.DOCKER_HUB_USERNAME }}", password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"}
+      - name: Activate docker experimental
+        run: |-
+          sudo bash -exc "service docker stop;python -c \"d='/etc/docker/daemon.json';\
+          import json;c=json.load(open(d));c['experimental']=True;\
+          open(d, 'w').write(json.dumps(c))\";systemctl restart docker"
+      - uses: actions/checkout@v2
+      - name: build & release
+        run: set -ex;
+             IMGV=${IMG_RELEASE};
+             t=${IMG}:${IMGV};
+             db() { docker build
+              --build-arg BUILDKIT_INLINE_CACHE="1" -t ${3} -f ${1} ${2} "${@:4}"; };
+             db ${DFILE} ${DPATH} ${t}-no-squash;docker tag ${t}-no-squash ${t};
+             if [ "x${NO_SQUASH}" = "x" ];then db ${DFILE} ${DPATH} ${t} --squash;fi;
+             if [ "x${{steps.v.outputs.releasable}}" = "xtrue" ];then for i in "" -no-squash;do docker push ${t}${i};done;fi;
+    strategy:
+      max-parallel: 5
+      fail-fast: false
+      matrix:
+        IMG_RELEASE:
+        - latest
+        IMG: ["corpusops/sshd"]
+        DFILE: ["Dockerfile"]
+        DPATH: ["."]
+on:
+  push:
+  workflow_dispatch:
+  schedule: [{cron: '1 0 1,3,5,15,17,19 * *'}]
