@@ -30,12 +30,13 @@ access the container via root ssh or mount each user's key in
 - `LOGIN_SHELL` default bash
 
 ### The SSH_USERS variable
-- Format is `username:uid:gid:password`, `comma: ,` separated.
+- Format is `username:uid:gid:password:home:loginshell`, `comma: ,` separated.
 - those opts are optional:
-    - `uid` (default: 1000 and increment for each user in list)
+    - `uid` (default: `1000` and increment for each user in list)
     - `gid` (default: `uid`)
+    - `home` (default `/home/$name`)
     - `password`
-    - `loginshell` (default: bash)
+    - `loginshell` (default: `$LOGIN_SHELL` > `/bin/bash`)
 - exemples:
     - `SSHD_USERS=toto,tata`: create a user `toto` with uid `1000`, and tata `1001`.
     - `SSHD_USERS=toto:1001::x`: create a user `toto` with uid `1001`, uid `1001` and password `x`.
