@@ -4,6 +4,10 @@ SSHD_SDEBUG=${SSHD_SDEBUG-${SDEBUG-}}
 DEBUG=${DEBUG-}
 SYNC_SSHKEYS_TIMER=${SYNC_SSHKEYS_TIMER:-60}
 UIDS_START=${UIDS_START:-1000}
+VERBOSE=${VERBOSE-}
+if [[ -n $DEBUG ]];then
+    VERBOSE="-v"
+fi
 log() { echo "$@">&2; }
 debuglog() {
     if [[ -n "$DEBUG" ]];then echo "$@" >&2;fi
@@ -43,7 +47,7 @@ export TZ="${TZ:-Europe/Paris}"
 execute_hooks pre "$@"
 
 echo $TZ > /etc/timezone
-cp -f /usr/share/zoneinfo/$TZ /etc/localtime
+cp $VERBOSE -f /usr/share/zoneinfo/$TZ /etc/localtime
 export MAX_RETRY=${MAX_RETRY:-6}
 if [[ -n "$SSHD_SDEBUG" ]];then
     set -x
@@ -52,16 +56,9 @@ touch $SSH_CONFIG
 if [ -e "$SSH_CONFIG".in ];then
     vv frep $SSH_CONFIG.in:$SSH_CONFIG --overwrite
 fi
-for i in /etc/authorized_keys /etc/ssh/keys;do
-    if [ -d $i.in ];then
-        rsync -azv $i.in/ $i/
-        chmod -Rf 700 $i
-        chown -Rf root:root $i
-    fi
-done
 # Copy default config from cache
 if [ ! "$(ls -A /etc/ssh)" ]; then
-   cp -a /etc/ssh.cache/* /etc/ssh/
+   rsync -az $VERBOSE /etc/ssh.cache/ /etc/ssh/
 fi
 
 execute_hooks pre_keys "$@"
@@ -76,34 +73,45 @@ elif ls /etc/ssh/ssh_host_* 1> /dev/null 2>&1; then
     print_fingerprints
 else
     echo ">> Generating new host keys"
-    mkdir -p /etc/ssh/keys
+    mkdir -p $VERBOSE /etc/ssh/keys
     ssh-keygen -A
-    mv /etc/ssh/ssh_host_* /etc/ssh/keys/
+    mv $VERBOSE /etc/ssh/ssh_host_* /etc/ssh/keys/
     print_fingerprints /etc/ssh/keys
 fi
 
 sync_ssh_user_keys() {
-
     debuglog "Syncing sshkeys"
+
     execute_hooks pre_users_keys "$@"
 
-    while read i;do
-        cp -rvf "$i" /etc/authorized_keys
-    done < <(find /etc/authorized_keys.in -mindepth 1 2>/dev/null )
+    for i in /etc/authorized_keys /etc/ssh/keys;do
+        if [ -e "${i}.in" ];then
+            rsync -azv --chown=0:0 "${i}.in/" "${i}/"
+        fi
+    done
 
     execute_hooks pre_users_chmod_keys "$@"
 
     # Fix permissions, if writable
     for sshconfigdir in ~/.ssh /etc/authorized_keys;do
         chown 0:0 $sshconfigdir
-        chmod g-w,o-rwx $sshconfigdir
+        chmod g-w,o-rw,o+x $sshconfigdir
         while read i;do
-            chown 0:0 $i
-            chmod g-wx,o-wx $i
+            chown $VERBOSE 0:0 $i
+            chmod $VERBOSE g-wx,o-wx $i
+            chmod $VERBOSE u+r $i
         done < <(find $sshconfigdir -type f -mindepth 1 2>/dev/null )
     done
 
     execute_hooks post_users_keys "$@"
+
+    for i in /etc/ssh/keys;do
+        chown -Rfv 0:0 $i
+        while read f;do chmod $VERBOSE -f 710 $f; done < <(find ${i} -type d)
+        while read f;do chmod $VERBOSE -f 600 $f; done < <(find ${i} -type f)
+    done
+
+    execute_hooks post_sys_keys "$@"
 
 }
 
@@ -123,29 +131,46 @@ execute_hooks pre_users "$@"
 
 # Add users if SSH_USERS=user:uid:gid set
 HAS_USERS=
+LOGIN_SHELL=${LOGIN_SHELL:-/bin/bash}
+VIAKEY_GID=${VIAKEY_GID:-5888}
+HOMES=${HOMES:-/home}
 passwd -d root
+addgroup -g ${VIAKEY_GID} viakey || true
 if [ -n "${SSH_USERS}" ]; then
     USERS=$(echo $SSH_USERS | tr "," "\n")
     userinc=${UIDS_START}
     for U in $USERS; do
         IFS=':' read -ra UA <<< "$U"
-        _NAME=${UA[0]}
-        _UID=${UA[1]:-${userinc}}
-        _GID=${UA[2]:-${_UID}}
-        _PW=${UA[3]:-}
-        log ">> Adding user ${_NAME} with uid: ${_UID}, gid: ${_GID}."
-        if [ ! -e "/etc/authorized_keys/${_NAME}" ]; then
-            log "WARNING: No SSH authorized_keys found for ${_NAME}!"
+        uname=${UA[0]}
+        uid=${UA[1]:-${userinc}}
+        gid=${UA[2]:-${uid}}
+        pw=${UA[3]:-}
+        h=${UA[4]:-${HOMES}/${uname}}
+        sh=${UA[5]:-$LOGIN_SHELL}
+        if [[ "${uname}" = "root" ]];then uid=0;gid=0;fi
+        if [ ! -e "/etc/authorized_keys/${uname}" ]; then
+            log "WARNING: No SSH authorized_keys found for ${uname}!"
         fi
-        getent group  ${_NAME} >/dev/null 2>&1 || addgroup                     -g ${_GID} ${_NAME}
-        getent passwd ${_NAME} >/dev/null 2>&1 || adduser -D -G ${_NAME} -s '' -u ${_UID} ${_NAME}
-        passwd -u ${_NAME} || true
-        if [[ -n "${_PW}" ]];then
-            log "Setting password for $_NAME"
-            printf "${_PW}\n${_PW}\n" | passwd "${_NAME}"
+        if [[ $uname != "root" ]];then
+            log ">> Adding or modifying user ${uname} with uid: ${uid}, gid: ${gid}."
+            getent group  $gid >/dev/null 2>&1 || addgroup -g ${gid} ${uname}grp
+            if ! ( getent passwd ${uname}    >/dev/null 2>&1 );then
+                useradd -m -s "${sh}" -g ${uid} -u ${uid} ${uname}
+            fi
+            usermod -o -d ${h} -s ${sh} -u ${uid} ${uname}
+            addgroup ${uname} $(getent group $gid|cut -d: -f1)
+        fi
+        passwd -u ${uname} || true
+        if [[ -n "${pw}" ]];then
+            log "Setting password for $uname"
+            printf "${pw}\n${pw}\n" | passwd "${uname}"
+        else
+            log "Disabling password for $uname"
+            addgroup ${uname} viakey
+            passwd -d ${uname} || true
         fi
         HAS_USERS=1
-        userinc=$(($userinc++))
+        userinc=$(($userinc +1))
     done
 fi
 
@@ -163,9 +188,9 @@ fi
 
 execute_hooks postacls "$@"
 
-rm -f /run/rsyslogd.pid
-cp -rfv /fail2ban/* /etc/fail2ban
-if [ -e /run/fail2ban ];then rm -f /run/fail2ban/fail2ban.*;fi
+rm $VERBOSE -f /run/rsyslogd.pid
+cp $VERBOSE -rf /fail2ban/* /etc/fail2ban
+if [ -e /run/fail2ban ];then rm $VERBOSE -f /run/fail2ban/fail2ban.*;fi
 frep --overwrite /fail2ban/jail.d/alpine-ssh.conf:/etc/fail2ban/jail.d/alpine-ssh.conf
 
 execute_hooks pre_run "$@"

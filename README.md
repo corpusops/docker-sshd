@@ -27,6 +27,7 @@ access the container via root ssh or mount each user's key in
 - `SYNC_SSHKEYS_TIMER` timer to sync keys inside the container
 - `TZ` user timezone
 - `UIDS_START` uids start (1000): default uid if you dont explicitly tell them
+- `LOGIN_SHELL` default bash
 
 ### The SSH_USERS variable
 - Format is `username:uid:gid:password`, `comma: ,` separated.
@@ -34,6 +35,7 @@ access the container via root ssh or mount each user's key in
     - `uid` (default: 1000 and increment for each user in list)
     - `gid` (default: `uid`)
     - `password`
+    - `loginshell` (default: bash)
 - exemples:
     - `SSHD_USERS=toto,tata`: create a user `toto` with uid `1000`, and tata `1001`.
     - `SSHD_USERS=toto:1001::x`: create a user `toto` with uid `1001`, uid `1001` and password `x`.
