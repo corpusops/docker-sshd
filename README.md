@@ -1,8 +1,8 @@
 # SSHD
-- build: [![docker.sshd](https://github.com/corpusops/docker.sshd/workflows/.github/workflows/cicd.yml/badge.svg?branch=master)]
+- build: ![docker.sshd](https://github.com/corpusops/docker.sshd/workflows/.github/workflows/cicd.yml/badge.svg?branch=master)
 
 - Minimal Alpine Linux Docker image with `sshd` exposed and `rsync` installed.
-  notable differences:
+  integration with:
     - logging (rsyslog)
     - logrotate logs
     - fail2ban
@@ -15,14 +15,14 @@ access the container via root ssh or mount each user's key in
   You can override in the compose setup the template location via the `SSHD_CONFIG` env var.
 
 - By default the image is in SFTP only mode.
-- User mounted sshkeys are synced every minute (default, change `SYNC_SSHKEYS_TIMER` (seconds))
+- User mounted sshkeys are synced every minute (default, you can change `SYNC_SSHKEYS_TIMER` (seconds))
 
 ## Environment Options
 
-- `SSH_USERS` list of user accounts and uids/gids to create. eg `SSH_USERS=www:48:48:SUPERPASSWORDPASSWORD,admin:1000:1000:SUPERSECRET`
+- `SSH_USERS` list of user accounts and uids/gids to create. eg `SSH_USERS=www:48:48:SUPERPASSWORDPASSWORD,admin:1000:1000:SUPERSECRET:/home/newhome:/bin/bash`
 - `MOTD` change the login message
 - `SFTP_MODE` if set to `true` sshd will only accept sftp connections
-- `SFTP_CHROOT` if set to `true` in sftp only mode sftp will be chrooted to this directory `SFTP_CHROOT_PATH`. Default `home`
+- `SFTP_CHROOT` if set to `true` in sftp only mode sftp will be chrooted to this directory `SFTP_CHROOT_PATH`. Default `/home`
 - `MAX_RETRY` max retries before fail2ban cut the line
 - `SYNC_SSHKEYS_TIMER` timer to sync keys inside the container
 - `TZ` user timezone
