@@ -18,12 +18,12 @@ ippost="$ipt -S POSTROUTING"
 RULE="-s $SUBNET ! -d $SUBNET -j SNAT --to-source $OUTIP"
 RULE="-s $SUBNET/24 ! -o br-sshd -j SNAT --to-source $OUTIP"
 get_snat_number() {
-    $ippost|egrep -nv "^-P"|egrep "$SUBNET.*SNAT.*$OUTIP"|head -n1|awk -F: '{print $1}'
+    $ippost|grep -E -nv "^-P"|grep -E "$SUBNET.*SNAT.*$OUTIP"|head -n1|awk -F: '{print $1}'
 }
 while [ infinite ];do
-    if ( $ippost | egrep -q SNAT );then
+    if ( $ippost | grep -E -q SNAT );then
         snatnumber=$(get_snat_number)
-        number=$($ippost|egrep -v "^-P"|grep -nv SNAT|head -n1|awk -F: '{print $1}')
+        number=$($ippost|grep -E -v "^-P"|grep -nv SNAT|head -n1|awk -F: '{print $1}')
     fi
     if [[ -n $snatnumber ]] && [[ -n $number ]] && [[ $snatnumber -gt $number ]];then
         log "Flushing SNAT to $OUTIP as docker rules messed it"

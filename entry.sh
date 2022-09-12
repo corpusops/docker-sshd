@@ -19,7 +19,7 @@ execute_hooks() {
     if [ ! -d "$hdir" ];then return 0;fi
     shift
     while read f;do
-        if ( echo "$f" | egrep -q "\.sh$" );then
+        if ( echo "$f" | grep -E -q "\.sh$" );then
             log "running shell hook($step): $f"
             . "${f}"
         else
