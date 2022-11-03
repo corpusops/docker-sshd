@@ -1,6 +1,6 @@
 FROM corpusops/alpine-bare:latest
 RUN apk update && \
-    apk add acl bash shadow git openssh rsync fail2ban && \
+    apk add acl bash shadow git openssh rsync fail2ban autossh && \
     deluser $(getent passwd 33 | cut -d: -f1) && \
     delgroup $(getent group 33 | cut -d: -f1) 2>/dev/null || true && \
     mkdir -p ~root/.ssh /etc/authorized_keys && chmod 700 ~root/.ssh/ && \
