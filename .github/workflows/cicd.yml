@@ -16,17 +16,17 @@ jobs:
             if ( echo "$GITHUB_REF" | egrep -q "${RELEASABLE_BRANCHES}" ) \
             && ( echo "$GITHUB_REPOSITORY" | egrep -q "${RELEASABLE_REPOS}" )
             then releasable=true;else releasable=false;fi
-            echo "::set-output name=releasable::$releasable"
-            echo "::set-output name=silent::$(echo $silent)"
+            echo "releasable=$releasable" >> $GITHUB_OUTPUT
+            echo "silent=$(echo $silent)" >> $GITHUB_OUTPUT
         id: v
-      - uses: docker/login-action@v1
+      - uses: docker/login-action@v2
         with: {username: "${{ secrets.DOCKER_HUB_USERNAME }}", password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"}
       - name: Activate docker experimental
         run: |-
           sudo bash -exc "service docker stop;python -c \"d='/etc/docker/daemon.json';\
           import json;c=json.load(open(d));c['experimental']=True;\
           open(d, 'w').write(json.dumps(c))\";systemctl restart docker"
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: build & release
         run: set -ex;
              IMGV=${IMG_RELEASE};
