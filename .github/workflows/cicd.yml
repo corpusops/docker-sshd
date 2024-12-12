@@ -35,7 +35,7 @@ jobs:
               --build-arg BUILDKIT_INLINE_CACHE="1" -t ${3} -f ${1} ${2} "${@:4}"; };
              db ${DFILE} ${DPATH} ${t}-no-squash;docker tag ${t}-no-squash ${t};
              if [ "x${NO_SQUASH}" = "x" ];then db ${DFILE} ${DPATH} ${t} --squash;fi;
-             if [ "x${{steps.v.outputs.releasable}}" = "xtrue" ];then for i in "" -no-squash;do docker push ${t}${i};done;fi;
+             if [ "x${{steps.v.outputs.releasable}}" = "xtrue" ];then for i in "";do docker push ${t}${i};done;fi;
     strategy:
       max-parallel: 5
       fail-fast: false
