@@ -46,6 +46,6 @@ jobs:
         DFILE: ["Dockerfile"]
         DPATH: ["."]
 on:
-  push:
-  workflow_dispatch:
-  schedule: [{cron: '1 0 1,3,5,15,17,19 * *'}]
+  # push:
+  # workflow_dispatch:
+  # schedule: [{cron: '1 0 1,3,5,15,17,19 * *'}]
